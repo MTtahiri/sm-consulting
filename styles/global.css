@@ -119,6 +119,3 @@ main {
 .hero, .features, .cta {
   min-height: 50vh;
 }
-body {
-  background-color: yellow !important;
-}
