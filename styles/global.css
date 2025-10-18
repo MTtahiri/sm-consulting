@@ -1,0 +1,124 @@
+/* Reset moderne global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Variables couleurs */
+:root {
+  --primary: #2557a7;
+  --primary-dark: #1e4a8f;
+  --secondary: #00c4b4;
+  --text: #2d3748;
+  --text-light: #718096;
+  --background: #ffffff;
+  --surface: #f7fafc;
+  --border: #e2e8f0;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+           0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Typographie globale */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--background);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* hauteur fenêtre */
+}
+
+/* Conteneur principal Next.js doit prendre toute la hauteur verticale */
+#__next {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Le contenu principal occupe l'espace vertical restant */
+main {
+  flex: 1;
+  padding-top: 80px; /* Compense le header fixe */
+  min-height: calc(100vh - 80px);
+}
+
+/* Conteneur paddé général */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Footer poussé en bas */
+.footer {
+  background: var(--surface);
+  padding: 60px 0 40px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 40px;
+}
+
+.footer-brand .logo {
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+.footer-brand p {
+  color: var(--text-light);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.footer-links h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.footer-links a {
+  display: block;
+  color: var(--text-light);
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* Styles responsives pour footer */
+@media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+/* Styles pour que sections principales aient une hauteur minimum */
+.hero, .features, .cta {
+  min-height: 50vh;
+}
+body {
+  background-color: yellow !important;
+}
