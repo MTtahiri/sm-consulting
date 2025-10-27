@@ -24,7 +24,7 @@ export default function Header() {
           <Link href="/candidats" className="nav-link">Candidats</Link>
           <Link href="/postuler" className="nav-link">Postuler</Link>
           <Link href="/offres" className="nav-link">Offres</Link>
-          <Link href="/coaptation" className="nav-link">Coaptation</Link>
+          <Link href="/cooptation" className="nav-link">Cooptation</Link>
           
           {/* Admin links - visible only in admin section */}
           {typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && (
