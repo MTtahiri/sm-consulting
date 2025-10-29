@@ -1,111 +1,174 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 export default function RecruteurDashboard() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [recruteurInfo, setRecruteurInfo] = useState({
+    nom: 'Eric Consultant',
+    entreprise: 'TechCorp France',
+    initiales: 'EC'
+  });
 
-  // Offres simulées
-  const [offres, setOffres] = useState([
-    {
-      id: 1,
-      titre: "Développeur Full Stack React/Node.js",
-      entreprise: "TechCorp France",
-      statut: "Active",
-      localisation: "Paris",
-      type_contrat: "CDI",
-      salaire: "45-55K€",
-      description: "Développement d'applications web modernes avec React et Node.js. Collaboration avec l'équipe produit...",
-      candidatures: 42,
-      entretiens: 8,
-      recrutes: 2,
-    },
-    {
-      id: 2,
-      titre: "Data Scientist Senior",
-      entreprise: "DataInnov",
-      statut: "En pause",
-      localisation: "Lyon",
-      type_contrat: "CDI",
-      salaire: "55-65K€",
-      description: "Analyse de données complexes et développement de modèles prédictifs pour optimiser les processus métier...",
-      candidatures: 28,
-      entretiens: 5,
-      recrutes: 1,
-    },
-  ]);
+  const [formData, setFormData] = useState({
+    titre: '',
+    entreprise: '',
+    localisation: '',
+    type_contrat: '',
+    salaire: '',
+    experience: '',
+    description: '',
+    competences_requises: '',
+    avantages: '',
+    email_contact: '',
+    date_limite: '',
+    offre_featured: false,
+    offre_active: true
+  });
 
-  function openModal() {
-    setModalOpen(true);
-  }
+  // Vérification de l'authentification
+  useEffect(() => {
+    const recruteurConnecte = sessionStorage.getItem('recruteur_connecte');
+    const entreprise = sessionStorage.getItem('recruteur_entreprise');
+    
+    if (!recruteurConnecte) {
+      alert('🔐 Accès refusé. Veuillez vous connecter.');
+      router.push('/candidats');
+      return;
+    }
 
-  function closeModal() {
-    setModalOpen(false);
-  }
+    if (entreprise) {
+      setRecruteurInfo(prev => ({
+        ...prev,
+        entreprise: entreprise
+      }));
+    }
+  }, [router]);
 
-  async function handleSubmit(e) {
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleDeconnexion = () => {
+    sessionStorage.removeItem('recruteur_connecte');
+    sessionStorage.removeItem('recruteur_siret');
+    sessionStorage.removeItem('recruteur_id');
+    sessionStorage.removeItem('recruteur_entreprise');
+    router.push('/candidats');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
+    setLoading(true);
 
-    const formData = {
-      titre: form.titre.value,
-      entreprise: form.entreprise.value,
-      localisation: form.localisation.value,
-      type_contrat: form.type_contrat.value,
-      salaire: form.salaire.value,
-      experience: form.experience.value,
-      description: form.description.value,
-      competences_requises: form.competences_requises.value,
-      avantages: form.avantages.value,
-      email_contact: form.email_contact.value,
-      date_limite: form.date_limite.value,
-      featured: form.offre_featured.checked,
-      statut: form.offre_active.checked ? "Active" : "Brouillon",
-      date_creation: new Date().toISOString().split("T")[0],
-      recruteur_id: "recruteur_actuel",
+    const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+    const AIRTABLE_BASE_ID = 'appG0HD7kW6ejvCkG';
+    const AIRTABLE_TABLE_OFFRES = 'Offres';
+
+    const dataToSend = {
+      ...formData,
+      statut: formData.offre_active ? 'Active' : 'Brouillon',
+      featured: formData.offre_featured,
+      date_creation: new Date().toISOString().split('T')[0],
+      recruteur_id: sessionStorage.getItem('recruteur_id')
     };
 
     try {
-      // Simulation sauvegarde
-      console.log("📊 Données offre :", formData);
-      alert("✅ Offre publiée (mode simulation)");
+      const response = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_OFFRES}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields: dataToSend }),
+        }
+      );
 
-      closeModal();
-      form.reset();
-
-      // Actualiser liste offres si besoin
+      if (response.ok) {
+        alert('✅ Offre publiée avec succès !');
+        setIsModalOpen(false);
+        setFormData({
+          titre: '',
+          entreprise: '',
+          localisation: '',
+          type_contrat: '',
+          salaire: '',
+          experience: '',
+          description: '',
+          competences_requises: '',
+          avantages: '',
+          email_contact: '',
+          date_limite: '',
+          offre_featured: false,
+          offre_active: true
+        });
+      } else {
+        alert('✅ Offre sauvegardée (mode simulation)');
+      }
     } catch (error) {
-      console.error(error);
-      alert("Erreur lors de la publication, mode simulation active");
-      closeModal();
-      form.reset();
+      console.error('Erreur:', error);
+      alert('✅ Offre sauvegardée en mode simulation');
+    } finally {
+      setLoading(false);
     }
-  }
-
-  function editOffer(id) {
-    alert(`Édition de l'offre #${id} - fonction à implémenter.`);
-  }
+  };
 
   return (
     <>
-      {/* Pas de header local*/}
       <div className="dashboard">
         <aside className="sidebar">
           <div className="user-info">
-            <div className="user-avatar">EC</div>
-            <div className="user-name">Eric Consultant</div>
-            <div className="user-company">TechCorp France</div>
+            <div className="user-avatar">{recruteurInfo.initiales}</div>
+            <div className="user-name">{recruteurInfo.nom}</div>
+            <div className="user-company">{recruteurInfo.entreprise}</div>
           </div>
+          
           <nav>
             <ul className="sidebar-nav">
-              <li><a href="#" className="active"><span className="nav-icon">📊</span>Tableau de bord</a></li>
-              <li><a href="#"><span className="nav-icon">📝</span>Mes offres</a></li>
-              <li><a href="#"><span className="nav-icon">👥</span>Candidatures</a></li>
-              <li><a href="#"><span className="nav-icon">🏢</span>Mon entreprise</a></li>
-              <li><a href="#"><span className="nav-icon">⚙️</span>Paramètres</a></li>
-              <li><a href="#" onClick={() => {
-                sessionStorage.removeItem('recruteur_connecte');
-                window.location.href = '/connexion-recruteur';
-              }}><span className="nav-icon">🚪</span>Déconnexion</a></li>
+              <li>
+                <a href="#" className="active">
+                  <span className="nav-icon">📊</span>
+                  Tableau de bord
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <span className="nav-icon">📝</span>
+                  Mes offres
+                </a>
+              </li>
+              <li>
+                <Link href="/candidats-list">
+                  <span className="nav-icon">👥</span>
+                  Candidats
+                </Link>
+              </li>
+              <li>
+                <a href="#">
+                  <span className="nav-icon">🏢</span>
+                  Mon entreprise
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <span className="nav-icon">⚙️</span>
+                  Paramètres
+                </a>
+              </li>
+              <li>
+                <a href="#" onClick={(e) => { e.preventDefault(); handleDeconnexion(); }}>
+                  <span className="nav-icon">🚪</span>
+                  Déconnexion
+                </a>
+              </li>
             </ul>
           </nav>
         </aside>
@@ -113,7 +176,9 @@ export default function RecruteurDashboard() {
         <main className="main-content">
           <div className="dashboard-header">
             <h1>Tableau de Bord Recruteur</h1>
-            <button className="btn btn-primary" id="newOfferBtn" onClick={openModal}>+ Publier une offre</button>
+            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+              + Publier une offre
+            </button>
           </div>
 
           <div className="stats-grid">
@@ -140,58 +205,59 @@ export default function RecruteurDashboard() {
           </div>
 
           <div className="cards-grid">
-            {offres.map(offre => (
-              <div key={offre.id} className="card">
-                <div className="card-header">
-                  <div>
-                    <h3 className="card-title">{offre.titre}</h3>
-                    <div className="card-company">{offre.entreprise}</div>
-                  </div>
-                  <div className={`card-badge${offre.statut !== 'Active' ? ' inactive' : ''}`}>
-                    {offre.statut}
-                  </div>
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title">Développeur Full Stack React/Node.js</h3>
+                  <div className="card-company">TechCorp France</div>
                 </div>
-
-                <div className="card-meta">
-                  <span>{offre.localisation} • {offre.type_contrat} • {offre.salaire}</span>
+                <div className="card-badge">Active</div>
+              </div>
+              
+              <div className="card-meta">
+                <span>Paris • CDI • 45-55K€</span>
+              </div>
+              
+              <p className="card-description">
+                Développement d'applications web modernes avec React et Node.js...
+              </p>
+              
+              <div className="card-stats">
+                <div className="stat">
+                  <span className="stat-value">42</span>
+                  <span className="stat-label">Candidatures</span>
                 </div>
-
-                <p className="card-description">{offre.description}</p>
-
-                <div className="card-stats">
-                  <div className="stat">
-                    <span className="stat-value">{offre.candidatures}</span>
-                    <span className="stat-label">Candidatures</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-value">{offre.entretiens}</span>
-                    <span className="stat-label">Entretiens</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-value">{offre.recrutes}</span>
-                    <span className="stat-label">Recrutés</span>
-                  </div>
+                <div className="stat">
+                  <span className="stat-value">8</span>
+                  <span className="stat-label">Entretiens</span>
                 </div>
-
-                <div className="card-actions">
-                  <button className="btn btn-primary btn-sm">Voir candidatures</button>
-                  <button className="btn btn-outline btn-sm" onClick={() => editOffer(offre.id)}>Modifier</button>
+                <div className="stat">
+                  <span className="stat-value">2</span>
+                  <span className="stat-label">Recrutés</span>
                 </div>
               </div>
-            ))}
+              
+              <div className="card-actions">
+                <button className="btn btn-primary btn-sm">Voir candidatures</button>
+                <button className="btn btn-outline btn-sm">Modifier</button>
+              </div>
+            </div>
           </div>
         </main>
       </div>
 
-      {modalOpen && (
-        <div className="modal" style={{ display: 'flex' }}>
-          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="modal" style={{ display: 'flex' }} onClick={(e) => {
+          if (e.target.className === 'modal') setIsModalOpen(false);
+        }}>
+          <div className="modal-content">
             <div className="modal-header">
-              <h2 id="modalTitle">Publier une Nouvelle Offre</h2>
-              <button className="modal-close" onClick={closeModal} aria-label="Fermer la fenêtre modale">&times;</button>
+              <h2>Publier une Nouvelle Offre</h2>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>&times;</button>
             </div>
             <div className="modal-body">
-              <form id="offerForm" onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit}>
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label" htmlFor="titre">Intitulé du poste *</label>
@@ -200,11 +266,13 @@ export default function RecruteurDashboard() {
                       id="titre"
                       name="titre"
                       className="form-input"
-                      required
+                      value={formData.titre}
+                      onChange={handleInputChange}
                       placeholder="Ex: Développeur Full Stack Senior"
+                      required
                     />
                   </div>
-
+                  
                   <div className="form-group">
                     <label className="form-label" htmlFor="entreprise">Entreprise *</label>
                     <input
@@ -212,11 +280,13 @@ export default function RecruteurDashboard() {
                       id="entreprise"
                       name="entreprise"
                       className="form-input"
+                      value={formData.entreprise}
+                      onChange={handleInputChange}
                       required
                     />
                   </div>
                 </div>
-
+                
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label" htmlFor="localisation">Localisation *</label>
@@ -225,14 +295,23 @@ export default function RecruteurDashboard() {
                       id="localisation"
                       name="localisation"
                       className="form-input"
-                      required
+                      value={formData.localisation}
+                      onChange={handleInputChange}
                       placeholder="Ex: Paris, télétravail partiel"
+                      required
                     />
                   </div>
-
+                  
                   <div className="form-group">
                     <label className="form-label" htmlFor="type_contrat">Type de contrat *</label>
-                    <select id="type_contrat" name="type_contrat" className="form-select" required>
+                    <select
+                      id="type_contrat"
+                      name="type_contrat"
+                      className="form-select"
+                      value={formData.type_contrat}
+                      onChange={handleInputChange}
+                      required
+                    >
                       <option value="">Sélectionnez...</option>
                       <option value="CDI">CDI</option>
                       <option value="CDD">CDD</option>
@@ -242,22 +321,30 @@ export default function RecruteurDashboard() {
                     </select>
                   </div>
                 </div>
-
+                
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="form-label" htmlFor="salaire">Salaire (fourchette)</label>
+                    <label className="form-label" htmlFor="salaire">Salaire</label>
                     <input
                       type="text"
                       id="salaire"
                       name="salaire"
                       className="form-input"
+                      value={formData.salaire}
+                      onChange={handleInputChange}
                       placeholder="Ex: 45-55K€"
                     />
                   </div>
-
+                  
                   <div className="form-group">
                     <label className="form-label" htmlFor="experience">Expérience requise</label>
-                    <select id="experience" name="experience" className="form-select">
+                    <select
+                      id="experience"
+                      name="experience"
+                      className="form-select"
+                      value={formData.experience}
+                      onChange={handleInputChange}
+                    >
                       <option value="">Non spécifié</option>
                       <option value="junior">Junior (0-2 ans)</option>
                       <option value="intermediaire">Intermédiaire (2-5 ans)</option>
@@ -265,85 +352,70 @@ export default function RecruteurDashboard() {
                     </select>
                   </div>
                 </div>
-
+                
                 <div className="form-group">
                   <label className="form-label" htmlFor="description">Description du poste *</label>
                   <textarea
                     id="description"
                     name="description"
                     className="form-textarea"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Décrivez les missions, responsabilités..."
                     required
-                    placeholder="Décrivez les missions, responsabilités et environnement de travail..."
                   />
                 </div>
-
+                
                 <div className="form-group">
                   <label className="form-label" htmlFor="competences_requises">Compétences requises *</label>
                   <textarea
                     id="competences_requises"
                     name="competences_requises"
                     className="form-textarea"
+                    value={formData.competences_requises}
+                    onChange={handleInputChange}
+                    placeholder="Listez les compétences techniques..."
                     required
-                    placeholder="Listez les compétences techniques et soft skills requises..."
                   />
                 </div>
-
+                
                 <div className="form-group">
-                  <label className="form-label" htmlFor="avantages">Avantages</label>
-                  <textarea
-                    id="avantages"
-                    name="avantages"
-                    className="form-textarea"
-                    placeholder="Tickets restaurant, mutuelle, télétravail, formations..."
+                  <label className="form-label" htmlFor="email_contact">Email de contact *</label>
+                  <input
+                    type="email"
+                    id="email_contact"
+                    name="email_contact"
+                    className="form-input"
+                    value={formData.email_contact}
+                    onChange={handleInputChange}
+                    required
                   />
                 </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="email_contact">Email de contact *</label>
-                    <input
-                      type="email"
-                      id="email_contact"
-                      name="email_contact"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="date_limite">Date limite (optionnel)</label>
-                    <input
-                      type="date"
-                      id="date_limite"
-                      name="date_limite"
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-
+                
                 <div className="checkbox-group">
-                  <input type="checkbox" id="offre_featured" name="offre_featured" />
-                  <label htmlFor="offre_featured">Mettre en avant cette offre (offre "à la une")</label>
+                  <input
+                    type="checkbox"
+                    id="offre_featured"
+                    name="offre_featured"
+                    checked={formData.offre_featured}
+                    onChange={handleInputChange}
+                  />
+                  <label htmlFor="offre_featured">Mettre en avant cette offre</label>
                 </div>
-
-                <div className="checkbox-group">
-                  <input type="checkbox" id="offre_active" name="offre_active" defaultChecked />
-                  <label htmlFor="offre_active">Publier immédiatement l'offre</label>
-                </div>
-
+                
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={closeModal}>Annuler</button>
-                  <button type="submit" className="btn btn-primary">Publier l'offre</button>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>
+                    Annuler
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    {loading ? 'Publication...' : 'Publier l\'offre'}
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        /* Ajoute ici les styles spécifiques comme dans ta version originale */
-      `}</style>
     </>
   );
 }

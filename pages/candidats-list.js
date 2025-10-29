@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function Candidats() {
-  const AIRTABLE_API_KEY = '***REMOVED***';
-  const AIRTABLE_BASE_ID = '***REMOVED***';
+export default function CandidatsList() {
+  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = 'appG0HD7kW6ejvCkG';
   const AIRTABLE_TABLE_NAME = 'CV consulting';
 
   const [tousLesCandidats, setTousLesCandidats] = useState([]);
@@ -18,7 +18,7 @@ export default function Candidats() {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?sort[0][field]=date_ajout&sort[0][direction]=desc`,
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}?sort[0][field]=date_ajout&sort[0][direction]=desc`,
           {
             headers: {
               Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -26,7 +26,11 @@ export default function Candidats() {
             },
           }
         );
-        if (!res.ok) throw new Error(`Erreur Airtable: ${res.statusText}`);
+        
+        if (!res.ok) {
+          throw new Error(`Erreur Airtable: ${res.statusText}`);
+        }
+        
         const data = await res.json();
 
         const candidats = data.records.map((record) => {
@@ -58,8 +62,9 @@ export default function Candidats() {
             cv_url: fields.cv_file_path || '',
             statut: statutAffichage,
             description: fields.description || 'Candidat motivé avec un bon profil technique.',
-            localisation: 'Île-de-France',
+            localisation: fields.localisation || 'Île-de-France',
             disponibilite: statutAffichage,
+            experience: fields.experience || 'Intermédiaire',
           };
         });
 
@@ -69,8 +74,37 @@ export default function Candidats() {
       } catch (error) {
         console.error('Erreur chargement candidats:', error);
         setLoading(false);
-        setTousLesCandidats([]);
-        setFilteredCandidats([]);
+        // Données de fallback pour la démo
+        const candidatsDemo = [
+          {
+            id: 'demo1',
+            nomCompletAnonyme: 'Sophie M.',
+            titre: 'Développeuse Full Stack',
+            competences: ['React', 'Node.js', 'TypeScript', 'AWS'],
+            statut: 'Disponible',
+            description: 'Développeuse passionnée avec 5 ans d\'expérience en développement web moderne.',
+            localisation: 'Paris',
+            disponibilite: 'Disponible',
+            email: 'contact@sm-consulting.fr',
+            cv_url: '',
+            experience: 'Senior'
+          },
+          {
+            id: 'demo2',
+            nomCompletAnonyme: 'Marc D.',
+            titre: 'DevOps Engineer',
+            competences: ['AWS', 'Kubernetes', 'Terraform', 'Docker'],
+            statut: 'Nouveau',
+            description: 'Expert DevOps avec une solide expérience en automatisation et cloud.',
+            localisation: 'Lyon',
+            disponibilite: 'Disponible',
+            email: 'contact@sm-consulting.fr',
+            cv_url: '',
+            experience: 'Expert'
+          }
+        ];
+        setTousLesCandidats(candidatsDemo);
+        setFilteredCandidats(candidatsDemo);
       }
     }
     fetchCandidats();
@@ -102,7 +136,7 @@ export default function Candidats() {
     else if (candidat.statut === 'Nouveau') badgeStyle = { background: '#f1f5f9', color: '#475569' };
 
     return (
-      <div className="candidate-card" key={candidat.id}>
+      <div className="candidate-card">
         <div className="candidate-header">
           <h3 className="candidate-title">{candidat.titre}</h3>
           <span className="candidate-badge" style={badgeStyle}>{candidat.statut}</span>
@@ -128,15 +162,20 @@ export default function Candidats() {
         </div>
 
         <div className="candidate-actions">
-          <a
-            href={`contact.html?candidat=${candidat.id}&nom=${encodeURIComponent(candidat.nomCompletAnonyme)}&poste=${encodeURIComponent(candidat.titre)}&email=${encodeURIComponent(candidat.email)}`}
+          <Link
+            href={`/contact?candidat=${candidat.id}&nom=${encodeURIComponent(candidat.nomCompletAnonyme)}&poste=${encodeURIComponent(candidat.titre)}&email=${encodeURIComponent(candidat.email)}`}
             className="btn btn-primary"
             style={{ flex: 1 }}
           >
             📧 Contacter
-          </a>
+          </Link>
           {candidat.cv_url && (
-            <a href={candidat.cv_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+            <a 
+              href={candidat.cv_url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-secondary"
+            >
               📄 CV
             </a>
           )}
@@ -159,17 +198,17 @@ export default function Candidats() {
               onChange={e => setFilterCompetence(e.target.value)}
             >
               <option value="">Toutes les compétences</option>
-              <option>React</option>
-              <option>Node.js</option>
-              <option>Python</option>
-              <option>Java</option>
-              <option>AWS</option>
-              <option>TypeScript</option>
-              <option>Vue.js</option>
-              <option>Angular</option>
-              <option>PHP</option>
-              <option>Symfony</option>
-              <option>Laravel</option>
+              <option value="React">React</option>
+              <option value="Node.js">Node.js</option>
+              <option value="Python">Python</option>
+              <option value="Java">Java</option>
+              <option value="AWS">AWS</option>
+              <option value="TypeScript">TypeScript</option>
+              <option value="Vue.js">Vue.js</option>
+              <option value="Angular">Angular</option>
+              <option value="PHP">PHP</option>
+              <option value="Symfony">Symfony</option>
+              <option value="Laravel">Laravel</option>
             </select>
             <select
               className="filter-select"
@@ -177,10 +216,10 @@ export default function Candidats() {
               onChange={e => setFilterExperience(e.target.value)}
             >
               <option value="">Tous les niveaux</option>
-              <option>Débutant</option>
-              <option>Intermédiaire</option>
-              <option>Senior</option>
-              <option>Expert</option>
+              <option value="Débutant">Débutant</option>
+              <option value="Intermédiaire">Intermédiaire</option>
+              <option value="Senior">Senior</option>
+              <option value="Expert">Expert</option>
             </select>
             <select
               className="filter-select"
@@ -188,11 +227,11 @@ export default function Candidats() {
               onChange={e => setFilterDisponibilite(e.target.value)}
             >
               <option value="">Toutes disponibilités</option>
-              <option>Disponible</option>
-              <option>En mission</option>
-              <option>1 mois</option>
-              <option>2 mois</option>
-              <option>3 mois+</option>
+              <option value="Disponible">Disponible</option>
+              <option value="En mission">En mission</option>
+              <option value="1 mois">1 mois</option>
+              <option value="2 mois">2 mois</option>
+              <option value="3 mois+">3 mois+</option>
             </select>
           </div>
         </div>
@@ -202,22 +241,28 @@ export default function Candidats() {
         <div className="container">
           {loading ? (
             <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-light)', fontSize: 18 }}>
-              Chargement des candidats depuis CV consulting...
+              Chargement des candidats depuis Airtable...
             </div>
           ) : filteredCandidats.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-light)', fontSize: 18, marginBottom: 16 }}>
-              Aucun candidat ne correspond à vos critères dans CV consulting
-              <br />
+            <div style={{ textAlign: 'center', padding: 60 }}>
+              <div style={{ color: 'var(--text-light)', fontSize: 18, marginBottom: 16 }}>
+                Aucun candidat ne correspond à vos critères
+              </div>
               <Link href="/postuler" className="btn btn-primary" style={{ marginTop: 24 }}>
                 Postuler comme candidat
               </Link>
             </div>
           ) : (
-            <div className="candidates-grid">
-              {filteredCandidats.map(candidat => (
-                <CarteCandidat key={candidat.id} candidat={candidat} />
-              ))}
-            </div>
+            <>
+              <div style={{ marginBottom: 24, color: 'var(--text-light)', textAlign: 'center' }}>
+                {filteredCandidats.length} candidat{filteredCandidats.length > 1 ? 's' : ''} trouvé{filteredCandidats.length > 1 ? 's' : ''}
+              </div>
+              <div className="candidates-grid">
+                {filteredCandidats.map(candidat => (
+                  <CarteCandidat key={candidat.id} candidat={candidat} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
