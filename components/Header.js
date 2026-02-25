@@ -22,6 +22,7 @@ export default function Header() {
         <nav className={`nav ${isMenuOpen ? 'open' : ''}`}>
           <Link href="/" className="nav-link">Accueil</Link>
           <Link href="/candidats" className="nav-link">Candidats</Link>
+          <Link href="/tarifs" className="nav-link">Tarifs</Link>
           <Link href="/postuler" className="nav-link">Postuler</Link>
           <Link href="/offres" className="nav-link">Offres</Link>
           <Link href="/cooptation" className="nav-link">Cooptation</Link>
