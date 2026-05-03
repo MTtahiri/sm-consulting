@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function Coaptation() {
+export default function Cooptation() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -77,7 +77,7 @@ export default function Coaptation() {
         <div className="container">
           <div className="hero-content" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
             <h1 className="hero-title">
-              Programme <span className="gradient-text">Coaptation</span>
+              Programme <span className="gradient-text">Cooptation</span>
             </h1>
             <p className="hero-subtitle">
               Générez des revenus passifs en recommandant des clients recruteurs. 
@@ -86,7 +86,7 @@ export default function Coaptation() {
             </p>
             <div className="hero-actions">
               <a href="#inscription" className="btn btn-primary btn-large">
-                Devenir Coaptant
+                Devenir Cooptant
               </a>
               <a href="#fonctionnement" className="btn btn-secondary btn-large">
                 Comment ça marche
@@ -152,7 +152,7 @@ export default function Coaptation() {
         <div className="container">
           <h2 className="section-title">Ils nous font confiance</h2>
           <p className="section-subtitle">
-            Découvrez les retours d'expérience de nos coaptants
+            Découvrez les retours d'expérience de nos cooptants
           </p>
           
           <div className="features-grid">
@@ -242,7 +242,7 @@ export default function Coaptation() {
       {/* Section CTA Inscription */}
       <section id="inscription" className="cta">
         <div className="container">
-          <h2 className="cta-title">Rejoignez notre programme Coaptation</h2>
+          <h2 className="cta-title">Rejoignez notre programme Cooptation</h2>
           <p className="cta-subtitle">
             Démarrez dès maintenant et générez des revenus complémentaires 
             en recommandant des clients de qualité.
@@ -251,7 +251,7 @@ export default function Coaptation() {
           <div className="coaptation-form-wrapper">
             {showMessage && (
               <div id="formMessage" className="form-success-message">
-                Merci ! Nous vous recontacterons sous 24h pour activer votre compte coaptation.
+                Merci ! Nous vous recontacterons sous 24h pour activer votre compte cooptation.
               </div>
             )}
             
@@ -302,7 +302,7 @@ export default function Coaptation() {
                 disabled={isSubmitting}
                 style={{ width: '100%' }}
               >
-                {isSubmitting ? 'Envoi en cours...' : 'Devenir Coaptant'}
+                {isSubmitting ? 'Envoi en cours...' : 'Devenir Cooptant'}
               </button>
             </form>
           </div>
